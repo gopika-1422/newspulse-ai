@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NewsPulse AI — India Edition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Design tokens ─────────────────────────────────────────── */
+    :root {
+      --bg:        #08090d;
+      --surface:   #0f1018;
+      --card:      #13141e;
+      --border:    #232438;
+      --accent:    #4f8ef7;
+      --violet:    #a78bfa;
+      --saffron:   #ff9933;
+      --green:     #34d399;
+      --red:       #f87171;
+      --text-hi:   #eeedf5;
+      --text-mid:  #8f8eaa;
+      --text-lo:   #4a4963;
+      --radius:    14px;
+      --font-head: 'Playfair Display', serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    /* ── Reset ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text-hi);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* subtle top glow */
+    body::after {
+      content: '';
+      position: fixed; top: -220px; left: 50%;
+      transform: translateX(-50%);
+      width: 900px; height: 520px;
+      background: radial-gradient(ellipse,
+        rgba(255,153,51,.06) 0%,
+        rgba(79,142,247,.05) 40%,
+        rgba(167,139,250,.03) 65%,
+        transparent 75%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── Layout ────────────────────────────────────────────────── */
+    .wrapper {
+      position: relative; z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── Header ────────────────────────────────────────────────── */
+    header {
+      padding: 56px 0 36px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 40px;
+    }
+    .pills { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 10px; font-weight: 500; letter-spacing: .1em;
+      text-transform: uppercase; padding: 4px 12px; border-radius: 100px;
+    }
+    .pill-gemini {
+      background: linear-gradient(135deg,rgba(79,142,247,.15),rgba(167,139,250,.15));
+      border: 1px solid rgba(167,139,250,.3); color: var(--violet);
+    }
+    .pill-india {
+      background: rgba(255,153,51,.1);
+      border: 1px solid rgba(255,153,51,.3); color: var(--saffron);
+    }
+    h1 {
+      font-family: var(--font-head);
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 900; letter-spacing: -.025em; line-height: 1.06;
+      background: linear-gradient(135deg, var(--text-hi) 40%, var(--violet) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .tagline { font-size: 14px; color: var(--text-mid); font-style: italic; margin-top: 6px; }
+
+    /* ── Search bar ────────────────────────────────────────────── */
+    .search-section { margin-bottom: 36px; }
+    .search-box {
+      display: flex;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+      transition: border-color .25s, box-shadow .25s;
+    }
+    .search-box:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(79,142,247,.12);
+    }
+    #query {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: var(--text-hi); font-family: var(--font-body);
+      font-size: 15px; padding: 16px 20px;
+    }
+    #query::placeholder { color: var(--text-lo); }
+    #search-btn {
+      background: linear-gradient(135deg, var(--accent), var(--violet));
+      color: #fff; border: none; padding: 0 30px;
+      font-family: var(--font-body); font-weight: 500;
+      font-size: 14px; letter-spacing: .04em;
+      cursor: pointer; white-space: nowrap;
+      transition: opacity .2s, transform .1s;
+    }
+    #search-btn:hover { opacity: .9; }
+    #search-btn:active { transform: scale(.97); }
+    #search-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    /* ── Topic chips ───────────────────────────────────────────── */
+    .chip-label {
+      font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text-lo); margin: 14px 0 7px;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 2px; }
+    .chip {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-mid); font-size: 12px;
+      padding: 5px 14px; border-radius: 100px;
+      cursor: pointer; transition: all .18s; user-select: none;
+    }
+    .chip:hover { border-color: var(--violet); color: var(--violet); background: rgba(167,139,250,.07); }
+    .chip.india {
+      border-color: rgba(255,153,51,.2); color: var(--saffron);
+      background: rgba(255,153,51,.05);
+    }
+    .chip.india:hover { border-color: var(--saffron); background: rgba(255,153,51,.12); }
+
+    /* ── Loader ────────────────────────────────────────────────── */
+    #status { text-align: center; padding: 56px 0; display: none; }
+    .spinner-wrap {
+      position: relative; width: 48px; height: 48px; margin: 0 auto 20px;
+    }
+    .spinner-wrap::before, .spinner-wrap::after {
+      content: ''; position: absolute; inset: 0;
+      border-radius: 50%; border: 2.5px solid transparent;
+    }
+    .spinner-wrap::before { border-top-color: var(--accent); animation: spin .8s linear infinite; }
+    .spinner-wrap::after  { border-bottom-color: var(--saffron); animation: spin 1.4s linear infinite reverse; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status-text { font-size: 13px; color: var(--text-mid); font-style: italic; }
+
+    /* ── Error banner ──────────────────────────────────────────── */
+    #error-box {
+      display: none;
+      background: rgba(248,113,113,.07);
+      border: 1px solid rgba(248,113,113,.25);
+      border-left: 4px solid var(--red);
+      border-radius: var(--radius);
+      padding: 16px 20px; color: var(--red);
+      font-size: 14px; margin-bottom: 28px;
+    }
+
+    /* ── Results meta bar ──────────────────────────────────────── */
+    #results-meta {
+      display: none;
+      font-size: 11px; letter-spacing: .07em; text-transform: uppercase;
+      color: var(--text-lo);
+      margin-bottom: 18px; padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+    }
+    .meta-right { display: flex; gap: 12px; align-items: center; }
+    .meta-ai { color: var(--violet); font-size: 10px; font-weight: 500; }
+    .meta-ai::before { content: '✦ '; }
+
+    /* ── Empty state ───────────────────────────────────────────── */
+    #empty-state {
+      display: none; text-align: center; padding: 64px 24px;
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 16px; }
+    .empty-title {
+      font-family: var(--font-head); font-size: 1.4rem;
+      color: var(--text-hi); margin-bottom: 10px;
+    }
+    .empty-msg { font-size: 14px; color: var(--text-mid); line-height: 1.75; }
+    .empty-tip { margin-top: 14px; font-size: 13px; color: var(--text-lo); }
+
+    /* ── Article cards ─────────────────────────────────────────── */
+    #results { display: flex; flex-direction: column; gap: 3px; }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px 26px;
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 18px; align-items: start;
+      animation: fadeUp .4s ease both;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+    }
+    .card:hover {
+      border-color: #2d2e48;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,.35);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-body { min-width: 0; }
+
+    .card-meta {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 10px; flex-wrap: wrap;
+    }
+    .source-badge {
+      font-size: 10px; font-weight: 500; letter-spacing: .1em;
+      text-transform: uppercase; padding: 3px 10px; border-radius: 100px;
+      color: var(--accent); background: rgba(79,142,247,.1);
+    }
+    .source-badge.guardian {
+      color: var(--saffron); background: rgba(255,153,51,.1);
+    }
+    .pub-date { font-size: 11px; color: var(--text-lo); }
+
+    .card-title {
+      font-family: var(--font-head); font-size: 1.1rem;
+      font-weight: 700; line-height: 1.32;
+      color: var(--text-hi); margin-bottom: 11px;
+    }
+    .card-summary {
+      font-size: 14px; color: var(--text-mid); line-height: 1.75;
+    }
+
+    .card-thumb {
+      width: 100px; height: 74px;
+      object-fit: cover; border-radius: 9px;
+      opacity: .82; flex-shrink: 0;
+      transition: opacity .2s;
+    }
+    .card:hover .card-thumb { opacity: 1; }
+
+    .card-footer {
+      margin-top: 16px; padding-top: 13px;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .read-link {
+      font-size: 12px; font-weight: 500; color: var(--accent);
+      text-decoration: none; letter-spacing: .03em;
+      display: inline-flex; align-items: center; gap: 5px;
+      transition: gap .2s, color .2s;
+    }
+    .read-link:hover { gap: 10px; color: var(--violet); }
+    .read-link::after { content: '→'; }
+    .ai-tag {
+      font-size: 10px; color: var(--text-lo);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .ai-tag::before { content: '✦'; color: var(--violet); font-size: 9px; }
+
+    /* ── Load more ─────────────────────────────────────────────── */
+    #load-more-wrap { text-align: center; margin-top: 32px; display: none; }
+    #load-more-btn {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-mid); padding: 12px 38px;
+      border-radius: 100px; font-family: var(--font-body);
+      font-size: 13px; cursor: pointer; transition: all .2s;
+    }
+    #load-more-btn:hover {
+      border-color: var(--violet); color: var(--violet);
+      background: rgba(167,139,250,.06);
+    }
+
+    /* ── Footer ────────────────────────────────────────────────── */
+    footer {
+      margin-top: 72px; padding-top: 24px;
+      border-top: 1px solid var(--border);
+      text-align: center; font-size: 12px;
+      color: var(--text-lo); line-height: 2;
+    }
+
+    /* ── Responsive ────────────────────────────────────────────── */
+    @media (max-width: 580px) {
+      .card { grid-template-columns: 1fr; }
+      .card-thumb { display: none; }
+      h1 { font-size: 2rem; }
+      #search-btn { padding: 0 16px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- ── Header ──────────────────────────────────────────────── -->
+  <header>
+    <div class="pills">
+      <span class="pill pill-gemini">✦ Gemini 2.0 Flash</span>
+      <span class="pill pill-india">🇮🇳 India Edition</span>
+    </div>
+    <h1>NewsPulse AI</h1>
+    <p class="tagline">
+      Regional Indian &amp; global news, distilled by Google Gemini ·
+      The Guardian + NewsAPI · Smart regional search
+    </p>
+  </header>
+
+  <!-- ── Search ───────────────────────────────────────────────── -->
+  <section class="search-section">
+    <div class="search-box">
+      <input
+        id="query" type="text"
+        placeholder="Search any topic — Cricket, Puducherry, AI, Climate Change…"
+        autocomplete="off"
+      />
+      <button id="search-btn" onclick="searchNews()">Search</button>
+    </div>
+
+    <p class="chip-label">🇮🇳 Indian Regional</p>
+    <div class="chips">
+      <span class="chip india" onclick="quickSearch(this)">Puducherry</span>
+      <span class="chip india" onclick="quickSearch(this)">Tamil Nadu Election</span>
+      <span class="chip india" onclick="quickSearch(this)">Chennai</span>
+      <span class="chip india" onclick="quickSearch(this)">Kerala Politics</span>
+      <span class="chip india" onclick="quickSearch(this)">Karnataka</span>
+      <span class="chip india" onclick="quickSearch(this)">Coimbatore</span>
+      <span class="chip india" onclick="quickSearch(this)">Telangana</span>
+      <span class="chip india" onclick="quickSearch(this)">Delhi AAP BJP</span>
+      <span class="chip india" onclick="quickSearch(this)">India Economy</span>
+      <span class="chip india" onclick="quickSearch(this)">Mumbai</span>
+    </div>
+
+    <p class="chip-label" style="margin-top:10px">🌍 Global Topics</p>
+    <div class="chips">
+      <span class="chip" onclick="quickSearch(this)">Artificial Intelligence</span>
+      <span class="chip" onclick="quickSearch(this)">Cricket</span>
+      <span class="chip" onclick="quickSearch(this)">Climate Change</span>
+      <span class="chip" onclick="quickSearch(this)">Space Exploration</span>
+      <span class="chip" onclick="quickSearch(this)">Cybersecurity</span>
+      <span class="chip" onclick="quickSearch(this)">Startup</span>
+      <span class="chip" onclick="quickSearch(this)">Technology</span>
+    </div>
+  </section>
+
+  <!-- ── Error ─────────────────────────────────────────────────── -->
+  <div id="error-box"></div>
+
+  <!-- ── Loader ────────────────────────────────────────────────── -->
+  <div id="status">
+    <div class="spinner-wrap"></div>
+    <p class="status-text" id="status-text">Fetching news…</p>
+  </div>
+
+  <!-- ── Meta bar ──────────────────────────────────────────────── -->
+  <div id="results-meta" style="display:none">
+    <span id="meta-count"></span>
+    <div class="meta-right">
+      <span id="meta-sources" style="font-size:10px;color:var(--text-lo)"></span>
+      <span class="meta-ai">Summarised by Gemini 2.0 Flash</span>
+    </div>
+  </div>
+
+  <!-- ── Empty state ───────────────────────────────────────────── -->
+  <div id="empty-state">
+    <div class="empty-icon">🔍</div>
+    <div class="empty-title">No articles found</div>
+    <p class="empty-msg">We couldn't find recent news for this topic.</p>
+    <p class="empty-tip">
+      Try being more specific — e.g.
+      <em>"Puducherry flood 2024"</em> or <em>"Tamil Nadu DMK election"</em>
+    </p>
+  </div>
+
+  <!-- ── Cards ─────────────────────────────────────────────────── -->
+  <div id="results"></div>
+
+  <!-- ── Load more ─────────────────────────────────────────────── -->
+  <div id="load-more-wrap">
+    <button id="load-more-btn" onclick="loadMore()">Load More Articles</button>
+  </div>
+
+  <!-- ── Footer ────────────────────────────────────────────────── -->
+  <footer>
+    NewsPulse AI — India Edition<br />
+    News from The Guardian &amp; NewsAPI.org ·
+    Summaries by Google Gemini 2.0 Flash ·
+    Results cached 10 min
+  </footer>
+
+</div><!-- /wrapper -->
+
+<script>
+  // ── Config ──────────────────────────────────────────────────────────────────
+  // Change this to your deployed backend URL if you host it online
+  const API_BASE  = 'http://localhost:8000/api';
+  const PAGE_SIZE = 5;   // cards shown before "Load More"
+
+  // ── State ───────────────────────────────────────────────────────────────────
+  let allResults = [];
+  let shownCount = 0;
+
+  // ── DOM helpers ─────────────────────────────────────────────────────────────
+  const el      = id => document.getElementById(id);
+  const show    = id => { el(id).style.display = 'block'; };
+  const hide    = id => { el(id).style.display = 'none';  };
+  const showFlex = id => { el(id).style.display = 'flex'; };
+
+  function formatDate(iso) {
+    if (!iso) return '';
+    try {
+      return new Date(iso).toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric',
+      });
+    } catch { return ''; }
+  }
+
+  function esc(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // ── Quick-search chips ───────────────────────────────────────────────────────
+  function quickSearch(chip) {
+    el('query').value = chip.textContent.trim();
+    searchNews();
+  }
+
+  // ── Render one card ──────────────────────────────────────────────────────────
+  function renderCard(article, delay) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.animationDelay = `${delay}ms`;
+
+    const isGuardian = article.source === 'The Guardian';
+    const date       = formatDate(article.published_at);
+    const thumb      = article.image
+      ? `<img class="card-thumb" src="${esc(article.image)}" alt=""
+             loading="lazy" onerror="this.style.display='none'" />`
+      : '';
+
+    card.innerHTML = `
+      <div class="card-body">
+        <div class="card-meta">
+          <span class="source-badge ${isGuardian ? 'guardian' : ''}">${esc(article.source)}</span>
+          ${date ? `<span class="pub-date">${date}</span>` : ''}
+        </div>
+        <div class="card-title">${esc(article.title)}</div>
+        <div class="card-summary">${esc(article.summary)}</div>
+        <div class="card-footer">
+          <a class="read-link"
+             href="${esc(article.url)}"
+             target="_blank"
+             rel="noopener noreferrer">Read full article</a>
+          <span class="ai-tag">GEMINI SUMMARY</span>
+        </div>
+      </div>
+      ${thumb}
+    `;
+    el('results').appendChild(card);
+  }
+
+  // ── Pagination ───────────────────────────────────────────────────────────────
+  function loadMore() {
+    const batch = allResults.slice(shownCount, shownCount + PAGE_SIZE);
+    batch.forEach((a, i) => renderCard(a, i * 80));
+    shownCount += batch.length;
+    if (shownCount >= allResults.length) hide('load-more-wrap');
+  }
+
+  // ── Main search ──────────────────────────────────────────────────────────────
+  async function searchNews() {
+    const query = el('query').value.trim();
+    if (!query) { el('query').focus(); return; }
+
+    // Reset UI state
+    allResults = []; shownCount = 0;
+    el('results').innerHTML = '';
+    el('results-meta').style.display = 'none';
+    hide('load-more-wrap');
+    hide('error-box');
+    hide('empty-state');
+
+    // Show loader
+    show('status');
+    el('search-btn').disabled = true;
+
+    const msgs = [
+      'Searching regional sources…',
+      'Checking The Guardian…',
+      'Scanning NewsAPI…',
+      'Sending to Gemini 2.0…',
+      'Generating summaries…',
+      'Almost ready…',
+    ];
+    let idx = 0;
+    const ticker = setInterval(() => {
+      el('status-text').textContent = msgs[++idx % msgs.length];
+    }, 1400);
+
+    try {
+      const resp = await fetch(`${API_BASE}/news?q=${encodeURIComponent(query)}`);
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        throw new Error(data.detail || `Server error ${resp.status}`);
+      }
+
+      if (!data.results || data.results.length === 0) {
+        hide('status');
+        show('empty-state');
+        return;
+      }
+
+      allResults = data.results;
+
+      // Source summary for meta bar
+      const guardianCount = allResults.filter(a => a.source === 'The Guardian').length;
+      const otherCount    = allResults.length - guardianCount;
+      const srcParts = [];
+      if (guardianCount) srcParts.push(`${guardianCount} from The Guardian`);
+      if (otherCount)    srcParts.push(`${otherCount} from NewsAPI`);
+
+      el('meta-count').textContent =
+        `${allResults.length} article${allResults.length !== 1 ? 's' : ''} for "${data.query}"`;
+      el('meta-sources').textContent = srcParts.join(' · ');
+      showFlex('results-meta');
+
+      // Render first page
+      allResults.slice(0, PAGE_SIZE).forEach((a, i) => renderCard(a, i * 100));
+      shownCount = Math.min(PAGE_SIZE, allResults.length);
+      if (allResults.length > PAGE_SIZE) show('load-more-wrap');
+
+    } catch (err) {
+      el('error-box').textContent = '⚠  ' + (err.message || 'Something went wrong. Please try again.');
+      show('error-box');
+    } finally {
+      clearInterval(ticker);
+      hide('status');
+      el('search-btn').disabled = false;
+    }
+  }
+
+  // Enter key triggers search
+  el('query').addEventListener('keydown', e => {
+    if (e.key === 'Enter') searchNews();
+  });
+</script>
+</body>
+</html>
